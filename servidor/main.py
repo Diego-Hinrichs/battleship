@@ -1,44 +1,39 @@
-import socket
+from clases.Player import Player
+from clases.Coordinates import Coordinates
+from clases.Server import Server
 
 # https://docs.python.org/3/library/socket.html
 # https://pythontic.com/modules/socket/recvfrom
 
-local_ip = "127.0.0.1"
-local_port = 20002
-bufferSize = 1024
+server = Server()
+udp_server_socket = server.start_server()
 
-# Crear socket
-# Familia de direcciones con las cuales mi socket puede comunicarse (AF_INET -> IPv4)
-# También esta (AF_INET6 -> IPv6) (AF_BLUETOOTH, AF_UNIX)
-UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-
-# Vincular socket a la direccion. El socket no debe estar vinculado
-UDPServerSocket.bind((local_ip, local_port))
-
-print("Esperando la conexión inicial del cliente...")
-init_data, client_address = UDPServerSocket.recvfrom(1024)
-
-def accept_connection(data: bytes):
-    if data.decode(encoding='utf-8', errors='strict') == "CONEXION":
-        UDPServerSocket.sendto("CONEXION_ACEPTADA".encode(encoding='utf-8', errors='strict'), client_address)
-        print(f"Conexión aceptada desde {client_address}")
-        return (True, client_address)
+def connect():
+    if not server.used_ports.get(client_address[1]):
+        response = ("connection accepted").encode(encoding='utf-8', errors='strict') 
+        udp_server_socket.sendto(response, client_address)
+        server.used_ports.update({client_address[1]: True}) # Agregar el puerto a un dict puerto: bool
+        player = Player(client_address[1], [], 6) # Como lo asigna python, no es necesario validar el puerto
+        print(f"Nuevo jugador en el puerto (id): {client_address[1]}\n")
+        server.online_players.append(player)
     else:
-        print("Conexión rechazada. Cerrando el servidor.")
-        UDPServerSocket.close()
-        return False
-    
-conn, client_address = accept_connection(data=init_data)
+        # TODO. intentos, si supera los 5 lo baneo por weta :)
+        # print(f"Jugador ya se encuentra en linea {client_address[1]}\n")
+        response = ("El jugador ya se encuentra online").encode(encoding='utf-8', errors='strict') 
+        udp_server_socket.sendto(response, client_address)
 
-def commands(command: str):
-    if command == "chao":
-        UDPServerSocket.sendto("Cerrando conexion".encode(encoding='utf-8', errors='strict'), client_address)
-        UDPServerSocket.close()
-        exit()
+def actions(recived_action: str, client_address):
+    action = recived_action in server.actions
+    if(action):
+        if recived_action == "connect":
+            connect()
+        elif recived_action == "disconnect":
+            print(f"Conexión terminada con: {client_address[1]}\n")
     else:
-        print(f"Recibido desde {client_address}: {command}")
+        response = ("Accion no valida").encode(encoding='utf-8', errors='strict') 
+        udp_server_socket.sendto(response, client_address)
+        print(f"Accion incorrecta: {recived_action}\nRecibido desde: {client_address[1]}\nPara ver los comandos disponibles, escribe: help")
 
-# Se acepta la conexion del cliente
-while(conn):
-    msg, client_address = UDPServerSocket.recvfrom(1024)
-    commands(msg.decode(encoding='utf-8', errors='strict'))
+while(True):
+    msg, client_address = udp_server_socket.recvfrom(1024)
+    actions(msg.decode(encoding='utf-8', errors='strict').lower(), client_address)
