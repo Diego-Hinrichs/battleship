@@ -15,13 +15,10 @@ class Board:
             print(" ")
     
     def make_attack(self, x, y):
-        self.board[x][y] = "[x]"
-        return self.board
-
-board = Board(size=5)
-board.new_board()
-print("Pre attack\n")
-board.show_board()
-board.make_attack(x = 1, y = 2)
-print("Post attack\n")
-board.show_board()
+        try:
+            self.board[x][y] = "[x]"
+            self.show_board()
+            return self.board
+        except IndexError:
+            print(f"Coordenada incorrecta, jugar 0-{self.size-1}")
+            
