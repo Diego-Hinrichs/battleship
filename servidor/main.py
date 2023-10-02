@@ -3,6 +3,7 @@ from clases.Coordinates import Coordinates
 from clases.Server import Server
 from clases.Board import Board
 from clases.ServerMsg import ServerMessage
+import json
 
 server = Server()
 udp_server_socket = server.start_server()
@@ -14,7 +15,8 @@ def send_msg(response, udp_server_socket, client_address):
 
 while(True):
     recieved_msg, client_address = udp_server_socket.recvfrom(1024)
-    is_valid_action, action = server.validate_action(recieved_msg.decode(encoding='utf-8', errors='strict'))
+    msg = json.loads(recieved_msg.decode(encoding='utf-8', errors='strict'))
+    is_valid_action, action = server.validate_action(msg)
     if(is_valid_action):
         ### Conectamos al usuario
         if action == "c":
@@ -27,14 +29,12 @@ while(True):
         
         ### Selecciona tipo partida
         if action == "s":
-            if (server.select_match(client_address)):
+            if (server.select_match(client_address, msg)):
                 response = ServerMessage(action=action, status=1).make_message()
                 send_msg(response, udp_server_socket, client_address)
             else: 
                 response = ServerMessage(action=action, status=0).make_message()
                 send_msg(response, udp_server_socket, client_address)
-
-
 
         ### Construye sus barcos
         
