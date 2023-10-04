@@ -7,9 +7,8 @@ import json
 
 server = Server()
 udp_server_socket = server.start_server()
-print(f"\nIniciando servidor en:\t{server.server_ip}:{server.server_port}")
-
-def send_msg(response, udp_server_socket, client_address):
+def send_msg(client_address, action, status, position):
+    response = ServerMessage(action=action, status=status, position=position).make_message()
     udp_server_socket.sendto(response.encode(encoding='utf-8', errors='strict'), client_address)
     return 0
 
@@ -21,20 +20,16 @@ while(True):
         ### Conectamos al usuario
         if action == "c":
             if (server.connect_player(client_address)):
-                response = ServerMessage(action=action, status=1).make_message()
-                send_msg(response, udp_server_socket, client_address)
+                send_msg(client_address, action, status=1, position=[])
             else: 
-                response = ServerMessage(action=action, status=0).make_message()
-                send_msg(response, udp_server_socket, client_address)
+                send_msg(client_address, action, status=0, position=[])
         
         ### Selecciona tipo partida
         if action == "s":
             if (server.select_match(client_address, msg)):
-                response = ServerMessage(action=action, status=1).make_message()
-                send_msg(response, udp_server_socket, client_address)
+                send_msg(client_address, action, status=1, position=[])
             else: 
-                response = ServerMessage(action=action, status=0).make_message()
-                send_msg(response, udp_server_socket, client_address)
+                send_msg(client_address, action, status=0, position=[])
 
         ### Construye sus barcos
         
@@ -48,14 +43,11 @@ while(True):
         ### Se desconecta
         if action == "d":
             if (server.disconnect_player(client_address)):
-                response = ServerMessage(action=action, status=1).make_message()
-                send_msg(response, udp_server_socket, client_address)
+                send_msg(client_address, action, status=1, position=[])
             else: 
-                response = ServerMessage(action=action, status=0).make_message()
-                send_msg(response, udp_server_socket, client_address)
+                send_msg(client_address, action, status=0, position=[])
     else:
         ### Mensaje de accion invalida
-        response = ServerMessage(action=action, status=0).make_message()
-        send_msg(response, udp_server_socket, client_address)
+        send_msg(client_address, action, status=0, position=[])
         #print(f"Accion incorrecta: {recieved_msg.decode(encoding='utf-8', errors='strict')}\tRecibido desde: {client_address[1]}\n")
     

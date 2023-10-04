@@ -1,10 +1,12 @@
 from dataclasses import dataclass, field
 from clases.Board import Board
 
+
 @dataclass
 class Player:
     """Clase que define al Jugador"""
-    status: int = 0 # 0: Desconectado. 1: Conectado. 2: Eligió modo de juego. 3: Puso barcos. 4: Esta jugando
+    status: int = 0 # 0: Desconectado; 1: Conectado; 2: Eligió modo de juego; 3: Puso barcos; 4: Esta jugando -> Si pierde pasa a 0: Desconectado
+    match_type: int = 1 # 1: PvB, 0: PvP
     player_id: int = 0 
     ships: list = field(default_factory=list)
     remaining_lives: int = 6
@@ -14,6 +16,13 @@ class Player:
         self.status = new_status
         return self
     
-    # Falta agregar cosas
-    def show_player(self):
-        return self.player_id, self.ships, self.remaining_lives, self.board
+    def select_match_type(self, match_type):
+        """
+        1: Player vs Bot
+        0: Player vs Player
+        """
+        self.match_type = match_type
+        return self
+
+    def __str__(self) -> str:
+        return f"{'Jugador:':<17}{self.player_id}\n{'Status:':<17}{self.status}\n{'Tipo de partida:':<17}{'Player vs Bot' if self.match_type else 'Player vs Player'}\n{'Vidas:':<17}{self.remaining_lives}"

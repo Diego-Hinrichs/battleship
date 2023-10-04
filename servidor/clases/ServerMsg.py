@@ -13,7 +13,7 @@ class ServerMessage():
     def make_message(self):
         return msg_json(action = self.action, status = self.status, position = self.position)
     
-    def print(self):
-        print({"action": self.action, 
-            "status": self.status, 
-            "position": self.position})
+    def __str__(self):
+        f"'action': {self.action}\
+            'status': {self.status}\
+            'position': {self.position}"

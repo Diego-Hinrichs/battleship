@@ -4,15 +4,19 @@ import json
 def msg_json(action: str, bot: int, ships: dict, position: list) -> str:
     return json.dumps({"action": action, "bot": bot, "ships": ships, "position": position})
 
-# SELECT: PvP o PvB
 def select_match_type() -> int:
+    """
+    0: Player vs Bot
+    1: Player vs Player
+    """
     chosse =  False
     while(not chosse):
         option = str(input("Quieres jugar contra un bot? [Y/n]: "))
-        if option.lower() =="y":
-            return 1
-        elif option.lower() == "n":
+        if option.lower() == "n":
             return 0
+        elif option.lower() =="y":
+            return 1
+    return 1
 
 def make_single_ship(ship_type: str, ships_dict: dict) -> dict:
     if ship_type == "b":
@@ -25,9 +29,6 @@ def make_single_ship(ship_type: str, ships_dict: dict) -> dict:
         ships_dict.update({ship_type: [int(x), int(y), int(o)]})
     return ships_dict
 
-#TODO. Validar barcos en servidor
-#Se devuelve status 0 en caso de error con algun barco... (servidor)
-#TODO. Se reconstruye el barco con error
 def build_ships() -> dict:
     ships_dict = {}
     ships = ["p", "b", "s"]
@@ -90,9 +91,9 @@ class ClientMessage():
         else:
             return msg_json(self.action, self.bot, self.ships, [])
 
-    def print(self):
-        print({"action": self.action, 
-               "bot": self.bot, 
-               "ships": self.ships, 
-               "position": self.position})
+    def __str__(self):
+        return f"'action': {self.action}\
+                'bot': {self.bot}\
+                'ships': {self.ships}\
+                'position': {self.position}"
         

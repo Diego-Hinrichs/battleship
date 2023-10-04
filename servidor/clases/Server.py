@@ -3,34 +3,28 @@ from clases.Player import Player
 from clases.Board import Board
 import socket
 
-def get_player_from_list(list: list, player_id: int) -> Player:
+def get_player(online_players: list[Player], player_id: int) -> tuple[Player, int]:
+    player_index = -1
     player_out = Player()
-    for player in list:
+    for index, player in enumerate(online_players):
         if (player.player_id == player_id):
             player_out = player
+            player_index = index
             break
-    return player_out
+    return (player_out, player_index)
 
 @dataclass
 class Server:
     """
     Clase servidor\n
-    Para poder abrir el server cambiar, server_ip a IPv4\n
-    !ip addr show | grep 'inet ' | grep -v '127.0.0.1' | awk '{print $2}' | cut -d'/' -f1
     """
     server_ip: str = "127.0.0.1"
     server_port: int = 20002
     buffersize: int = 1024
-    used_ports: dict = field(default_factory=dict) # Registro de jugadores que no estan con estado conectado
+    used_ports: dict = field(default_factory=dict) # Registro de jugadores que no estan con estado conectado (0)
     active_games: list = field(default_factory=list) # lista de triuplas (id_game, id_user1, id_user2)
     online_players: list = field(default_factory=list) # Jugadores conectados
     list_of_actions = ["a", "b", "c", "d", "l", "s"]
-    
-    #TODO. En caso de lose se van dropeados de aqui, pero permanecen conectados
-    playing_against_bots: list = field(default_factory=list) # Jugadores que jugaran vs bots
-    
-    #TODO. En caso de lose se van dropeados de aqui, pero permanecen conectados
-    playing_against_players: list = field(default_factory=list) # Jugadores en PvP
 
     def start_server(self):
         udp_server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -40,59 +34,67 @@ class Server:
 
     def validate_action(self, msg) -> tuple[bool, str]:
         action = msg["action"]
-        print(action)
-        if (action in self.list_of_actions):
+        CON_TUPLE = (True, action)
+        NEG_TUPLE = (False, action)
+        if (action.lower() in self.list_of_actions):
             if action == "c":
-                return (True, action)
+                return CON_TUPLE
             if action == "s":
-                return (True, action)
+                return CON_TUPLE
+            if action == "b":
+                return CON_TUPLE
             if action == "d":
-                return (True, action)
+                return CON_TUPLE
         else:
-            return (False, action)
-        return (True, action)
+            return NEG_TUPLE
+        return CON_TUPLE
     
     def connect_player(self, client_address) -> bool:
         player_id = client_address[1]
+        # no TODO. Cambiar a if player.status = 0
+        # pq se crea el jugador una vez conectado
+        # entonces primero se asocia el puerto
         if not self.used_ports.get(player_id):
             self.used_ports.update({player_id: True})
             board = Board()
             ### Se agrega al servidor un jugador con estado conectado
             player = Player(status=1, player_id=player_id, ships=[], remaining_lives=6, board=board)
-            print(f"Se ha conectado (id):\t{player_id}")
             self.online_players.append(player)
             return True
         else:
             print(f"Puerto (id): {player_id}, ya se encuentra conectado")
             return False
 
-    # Ojito aqui, que voy creando players x la vida, me voy a quedar sin memoria
-    # Controlar la seleccion
-    # Dps de selecionar la primera vez, no deberia dejar cambiar
     def select_match(self, client_address, msg)-> bool:
         player_id = client_address[1]
-        player = Player()
-        player = get_player_from_list(self.online_players, player_id)
-        valid = msg["bot"] in [1, 0]
-        if(valid and 1):
-            player.update_status(2)
-            self.playing_against_bots.append(player)
-        elif valid:
-            player.update_status(2)
-            self.playing_against_players.append(player)
-        else:
-            return False
-        return True
+        player, index = get_player(self.online_players, player_id)
+        # Si el jugador esta conectado, pero no ha seleccionado tipo de partida
+        if player.status == 1:
+            if(msg["bot"] == 0): # PvP
+                player.update_status(2)
+                player.select_match_type(0)
+                self.online_players[index] = player
+                return True
+            elif (msg["bot"] == 1): # Contra bot
+                player.update_status(2)
+                player.select_match_type(1)
+                self.online_players[index] = player
+                return True
+            else:
+                return False
+        return False
 
     def disconnect_player(self, client_address) -> bool:
         player_id = client_address[1]
-        player_to_disconnect = get_player_from_list(self.online_players, player_id)
-        print(player_to_disconnect)
+        player_to_disconnect, _ = get_player(self.online_players, player_id)
         if player_to_disconnect is not None:
             self.used_ports.update({player_id: False})
-            self.online_players.remove(player_to_disconnect)
-            print(f"Se ha desconectado (id):\t{player_id}")
-            return True
+            if player_to_disconnect in self.online_players:
+                self.online_players.remove(player_to_disconnect)
+                print(f"Se ha desconectado (id):\t{player_id}")
+                return True
+            else:
+                return False
         else:
             print(f"Puerto (id): {player_id}, no se encuentra conectado")
             return False
