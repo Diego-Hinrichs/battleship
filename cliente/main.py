@@ -17,8 +17,9 @@ def send_msg(response, upd_client_socket, server_address):
 print(f"Iniciando conexion con {server_ip} en el puerto {server_port}")
 while(True):
     action = str(input(f"{server_ip}:{server_port:<6}{'~ $':<4}")).lower()
-    msg_to_send = ClientMessage(action=action).make_message()
+    msg_to_send = ClientMessage(action=action).make_message(client)
     send_msg(msg_to_send, upd_client_socket, server_address)
+    #TODO. Si no me envian confirmacion en x tiempo
     recieved_msg, server_address = upd_client_socket.recvfrom(1024)
     print(recieved_msg.decode(encoding='utf-8', errors='strict'))
     msg = json.loads(recieved_msg.decode(encoding='utf-8', errors='strict'))

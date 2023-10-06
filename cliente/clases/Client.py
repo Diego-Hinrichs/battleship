@@ -16,6 +16,7 @@ class Client:
     def update_status(self, recieved_msg, msg_sent):
         action = recieved_msg["action"]
         msg_sent = json.loads(msg_sent)
+
         if (action in self.list_of_actions):
             recieved_status = recieved_msg["status"]
             if (action == "c") and recieved_status:
@@ -23,20 +24,21 @@ class Client:
                 print(f"Conexión exitosa con servidor!")
                 return True
             
-            elif (action == "b") and recieved_status:
-                self.status = 3 # Conectado
-                print(f"Barcos colocados en tablero...\nLa partida comenzara pronto")
-                return True
-            
             elif (action == "s") and recieved_status:
                 self.status = 2 # Eligio modo de juego
                 self.match_type = msg_sent["bot"]
                 print(f"{'Player vs Bot' if self.match_type else 'Player vs Player'}")
                 return True
+            
+            elif (action == "b") and recieved_status:
+                self.status = 3 # Colo los barcos
+                print(self.status)
+                #print(f"Barcos colocados en tablero...\nLa partida comenzara pronto")
+                return True
 
             elif (action == "d") and recieved_status:
                 self.status = 0 # Desconectado
-                print(f"Te haz desconectado, chao")
+                print(f"Te haz desconectado, bye bye!")
                 self.socket.close()
                 exit()
             else:
@@ -45,3 +47,5 @@ class Client:
         else:
             return False
     
+    def __str__(self) -> str:
+        return f"status: {self.status},\nmatch_type: {self.match_type}"
