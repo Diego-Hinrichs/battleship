@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from clases.Board import Board
+from clases.Ship import Ship
 
 @dataclass
 class Player:
@@ -8,7 +9,7 @@ class Player:
     match_type: int = 1 # 1: PvB, 0: PvP
     player_id: int = 0 
     remaining_lives: int = 6
-    board: Board = field(default_factory=Board)
+    ships: list[Ship] = field(default_factory=list[Ship])
 
     def update_status(self, new_status):
         self.status = new_status
@@ -27,4 +28,4 @@ class Player:
             f"{'Status:':<17}{self.status}\n" \
             f"{'Tipo de partida:':<17}{'Player vs Bot' if self.match_type else 'Player vs Player'}\n" \
             f"{'Vidas:':<17}{self.remaining_lives}\n" \
-            f"{'Board:':<17}{self.board}\n"
+            f"{'Board:':<17}{self.ships}\n"

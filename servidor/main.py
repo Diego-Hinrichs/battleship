@@ -32,6 +32,7 @@ while(True):
         if action == "b":
             if (server.build_ships(client_address, msg)):
                 send_msg(client_address, action, status=1, position=[])
+                #print(server.online_players)
             else: 
                 send_msg(client_address, action, status=0, position=[])
 

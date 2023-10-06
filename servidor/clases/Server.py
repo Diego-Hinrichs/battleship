@@ -60,7 +60,7 @@ class Server:
             self.used_ports.update({player_id: True})
             board = Board()
             ### Se agrega al servidor un jugador con estado conectado
-            player = Player(status=1, player_id=player_id, remaining_lives=6, board=board)
+            player = Player(status=1, player_id=player_id, remaining_lives=6, ships=[])
             self.online_players.append(player)
             return True
         else:
@@ -89,15 +89,15 @@ class Server:
     def build_ships(self, client_address: tuple, msg: dict) -> bool:
         ships_in = msg['ships'] # [x, y, orientacion]
         player_out, player_idx = get_player(self.online_players, client_address[1])
-        board = Board()
-        new_board = board.make_ships(ships_in)
+        temp_board = Board()
+        new_board = temp_board.make_ships(ships_in)
         
         if not new_board:
             return False
         else:
-            player_out.board = board
+            player_out.ships = temp_board.ships
             self.online_players[player_idx] = player_out
-            print(player_out.board)
+            print(player_out)
             return True
 
     def disconnect_player(self, client_address: tuple) -> bool:
