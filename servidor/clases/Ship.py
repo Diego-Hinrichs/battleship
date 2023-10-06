@@ -1,13 +1,46 @@
 from dataclasses import dataclass, field
+from clases.Coordinates import Coordinates
 
 @dataclass
 class Ship:
-    coordinates: list[tuple] = field(default_factory=list[tuple])
-    size: int = 1
+    size: int
+    list_coordinates: list[Coordinates] = field(default_factory=list[Coordinates])
+    orientation: int = 0 # Vertical
     type: str = "Barco patrulla"
-      
-    def __str__(self) -> str:
-        return f"Tamaño: {self.size}; Tipo: {self.type}; Coordenadas: {self.coordinates}"
     
-ship = Ship()
-print(ship)
+    def is_overlaped(self, overlap: list[Coordinates]):
+        if len(overlap) == 0:
+            return False
+        else:
+            for coord in self.list_coordinates:
+                return True if coord in overlap else False
+    
+    #TODO. Esto deberia estar en la clase coordinates
+    def coordinates_list(self, coord: Coordinates):
+        # Lista de coordenadas del barco si es horizontal
+        if self.orientation == 1:
+            for i in range(self.size):
+                if (coord.x + i >= 5) or (coord.y >= 5):
+                    print(coord.x+ i >= 5 , coord.y)
+                    return False # Fuera de rango
+                else:
+                    new_coord = Coordinates(coord.x + i, coord.y)
+                    self.list_coordinates.append(new_coord)
+            return self
+        
+        # Lista de coordenadas del barco si es vertical
+        elif self.orientation == 0:
+            for i in range(self.size):
+                if (coord.x >= 5) or (coord.y + i >= 5):
+                    print(coord.x, coord.y + i >= 5)
+                    return False # Fuera de rango
+                else:
+                    new_coord = Coordinates(coord.x, coord.y + i)
+                    self.list_coordinates.append(new_coord)
+            return self
+        
+    def __str__(self) -> str:
+        return  f"Tamaño: {self.size}\n"\
+                f"Orientacion: {'Horizontal' if self.orientation else 'Vertical'}\n"\
+                f"Tipo: {self.type}\n" \
+                f"Coordenadas: {[c for c in self.list_coordinates]}\n"

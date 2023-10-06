@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from clases.Player import Player
 from clases.Board import Board
+from clases.Ship import Ship
+from clases.Coordinates import Coordinates
 import socket
 
 def get_player(online_players: list[Player], player_id: int) -> tuple[Player, int]:
@@ -49,7 +51,7 @@ class Server:
             return NEG_TUPLE
         return CON_TUPLE
     
-    def connect_player(self, client_address) -> bool:
+    def connect_player(self, client_address: tuple) -> bool:
         player_id = client_address[1]
         # no TODO. Cambiar a if player.status = 0
         # pq se crea el jugador una vez conectado
@@ -58,14 +60,14 @@ class Server:
             self.used_ports.update({player_id: True})
             board = Board()
             ### Se agrega al servidor un jugador con estado conectado
-            player = Player(status=1, player_id=player_id, ships=[], remaining_lives=6, board=board)
+            player = Player(status=1, player_id=player_id, remaining_lives=6, board=board)
             self.online_players.append(player)
             return True
         else:
             print(f"Puerto (id): {player_id}, ya se encuentra conectado")
             return False
 
-    def select_match(self, client_address, msg)-> bool:
+    def select_match(self, client_address: tuple, msg: dict)-> bool:
         player_id = client_address[1]
         player, index = get_player(self.online_players, player_id)
         # Si el jugador esta conectado, pero no ha seleccionado tipo de partida
@@ -84,7 +86,21 @@ class Server:
                 return False
         return False
 
-    def disconnect_player(self, client_address) -> bool:
+    def build_ships(self, client_address: tuple, msg: dict) -> bool:
+        ships_in = msg['ships'] # [x, y, orientacion]
+        player_out, player_idx = get_player(self.online_players, client_address[1])
+        board = Board()
+        new_board = board.make_ships(ships_in)
+        
+        if not new_board:
+            return False
+        else:
+            player_out.board = board
+            self.online_players[player_idx] = player_out
+            print(player_out.board)
+            return True
+
+    def disconnect_player(self, client_address: tuple) -> bool:
         player_id = client_address[1]
         player_to_disconnect, _ = get_player(self.online_players, player_id)
         if player_to_disconnect is not None:

@@ -1,7 +1,4 @@
-from clases.Player import Player
-from clases.Coordinates import Coordinates
 from clases.Server import Server
-from clases.Board import Board
 from clases.ServerMsg import ServerMessage
 import json
 
@@ -31,8 +28,12 @@ while(True):
             else: 
                 send_msg(client_address, action, status=0, position=[])
 
-        ### Construye sus barcos
-        
+        ## Construye sus barcos
+        if action == "b":
+            if (server.build_ships(client_address, msg)):
+                send_msg(client_address, action, status=1, position=[])
+            else: 
+                send_msg(client_address, action, status=0, position=[])
 
         ### Juega
 

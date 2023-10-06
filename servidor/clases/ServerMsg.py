@@ -14,6 +14,4 @@ class ServerMessage():
         return msg_json(action = self.action, status = self.status, position = self.position)
     
     def __str__(self):
-        f"'action': {self.action}\
-            'status': {self.status}\
-            'position': {self.position}"
+        f"'action': {self.action} 'status': {self.status} 'position': {self.position}"
