@@ -4,10 +4,20 @@ from clases.Ship import Ship
 
 @dataclass
 class Player:
-    """Clase que define al Jugador"""
-    status: int = 0 # 0: Desconectado; 1: Conectado; 2: Eligió modo de juego; 3: Puso barcos; 4: Esta jugando -> Si pierde pasa a 0: Desconectado
+    """Clase Jugador\n
+    Status:
+    0: Desconectado
+    1: Conectado
+    2: Eligio modo de juego
+    3: Puso barcos
+    4: Esta jugando\n
+    Match_type:
+    1: PvB
+    0: PvP
+    """
+    status: int = 0 
     match_type: int = 1 # 1: PvB, 0: PvP
-    player_id: int = 0 
+    player_id: str = "" 
     remaining_lives: int = 6
     ships: list[Ship] = field(default_factory=list[Ship])
 
@@ -16,10 +26,6 @@ class Player:
         return self
     
     def select_match_type(self, match_type):
-        """
-        1: Player vs Bot
-        0: Player vs Player
-        """
         self.match_type = match_type
         return self
 

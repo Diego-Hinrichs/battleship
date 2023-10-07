@@ -1,19 +1,8 @@
 from dataclasses import dataclass, field
 from clases.Player import Player
 from clases.Board import Board
-from clases.Ship import Ship
-from clases.Coordinates import Coordinates
+from clases.utils import get_player
 import socket
-
-def get_player(online_players: list[Player], player_id: int) -> tuple[Player, int]:
-    player_index = -1
-    player_out = Player()
-    for index, player in enumerate(online_players):
-        if (player.player_id == player_id):
-            player_out = player
-            player_index = index
-            break
-    return (player_out, player_index)
 
 @dataclass
 class Server:
@@ -21,11 +10,11 @@ class Server:
     Clase servidor\n
     """
     server_ip: str = "127.0.0.1"
-    server_port: int = 20002
+    server_port: int = 20001
     buffersize: int = 1024
     used_ports: dict = field(default_factory=dict) # Registro de jugadores que no estan con estado conectado (0)
-    active_games: list = field(default_factory=list) # lista de triuplas (id_game, id_user1, id_user2)
-    online_players: list = field(default_factory=list) # Jugadores conectados
+    active_games: list = field(default_factory=list) # lista de match
+    online_players: list[Player] = field(default_factory=list[Player] ) # Jugadores conectados
     list_of_actions = ["a", "b", "c", "d", "l", "s"]
 
     def start_server(self):
@@ -52,23 +41,19 @@ class Server:
         return CON_TUPLE
     
     def connect_player(self, client_address: tuple) -> bool:
-        player_id = client_address[1]
-        # no TODO. Cambiar a if player.status = 0
-        # pq se crea el jugador una vez conectado
-        # entonces primero se asocia el puerto
+        player_id = f"{client_address[0]}:{str(client_address[1])}"
         if not self.used_ports.get(player_id):
             self.used_ports.update({player_id: True})
-            board = Board()
-            ### Se agrega al servidor un jugador con estado conectado
             player = Player(status=1, player_id=player_id, remaining_lives=6, ships=[])
             self.online_players.append(player)
+            print(player)
             return True
         else:
             print(f"Puerto (id): {player_id}, ya se encuentra conectado")
             return False
 
     def select_match(self, client_address: tuple, msg: dict)-> bool:
-        player_id = client_address[1]
+        player_id = f"{client_address[0]}:{str(client_address[1])}"
         player, index = get_player(self.online_players, player_id)
         # Si el jugador esta conectado, pero no ha seleccionado tipo de partida
         if player.status == 1:
@@ -76,32 +61,35 @@ class Server:
                 player.update_status(2)
                 player.select_match_type(0)
                 self.online_players[index] = player
+                print(player)
                 return True
-            elif (msg["bot"] == 1): # Contra bot
+            elif (msg["bot"] == 1): # PvP
                 player.update_status(2)
                 player.select_match_type(1)
                 self.online_players[index] = player
+                print(player)
                 return True
             else:
                 return False
-        return False
+        return True
 
     def build_ships(self, client_address: tuple, msg: dict) -> bool:
-        ships_in = msg['ships'] # [x, y, orientacion]
-        player_out, player_idx = get_player(self.online_players, client_address[1])
+        ships_in = msg['ships']
+        player_id = f"{client_address[0]}:{str(client_address[1])}"
+        player, index = get_player(self.online_players, player_id)
         temp_board = Board()
         new_board = temp_board.make_ships(ships_in)
-        
         if not new_board:
             return False
         else:
-            player_out.ships = temp_board.ships
-            self.online_players[player_idx] = player_out
-            print(player_out)
+            player.ships = temp_board.ships
+            self.online_players[index] = player
+            player.update_status(3)
+            print(player)
             return True
 
     def disconnect_player(self, client_address: tuple) -> bool:
-        player_id = client_address[1]
+        player_id = f"{client_address[0]}:{str(client_address[1])}"
         player_to_disconnect, _ = get_player(self.online_players, player_id)
         if player_to_disconnect is not None:
             self.used_ports.update({player_id: False})

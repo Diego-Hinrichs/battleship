@@ -9,23 +9,17 @@ class Ship:
     type: str = "Barco patrulla"
     
     def is_overlaped(self, overlap: list[Coordinates]):
-        #print(f"Coordenadas_input:{self.list_coordinates}")
-        #print(f"Overlap_list: {overlap}")
         if len(overlap) == 0:
             return False
         else:
-            for coord in self.list_coordinates:
-                if coord in overlap:
-                    #print(f"Overlap_here: {coord}")
-                    return True
-            return False
-                #return True if coord in overlap else False
+            return any(coord in overlap for coord in self.list_coordinates)
 
     #TODO. Esto deberia estar en la clase coordinates
     def coordinates_list(self, coord: Coordinates):
         # Lista de coordenadas del barco si es horizontal
         if self.orientation == 1:
             for i in range(self.size):
+                #TODO. Deberia ser board.size
                 if (coord.x + i >= 5) or (coord.y >= 5):
                     return False # Fuera de rango
                 else:
