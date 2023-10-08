@@ -6,29 +6,51 @@ def msg_json(action: str, bot: int, ships: dict, position: list) -> str:
     return json.dumps({"action": action, "bot": bot, "ships": ships, "position": position})
 
 def select_match_type() -> int:
-    """
-    0: Player vs Bot
-    1: Player vs Player
-    """
-    chosse =  False
-    while(not chosse):
+    while(True):
         option = str(input("Quieres jugar contra un bot? [Y/n]: "))
         if option.lower() == "n":
             return 0
         elif option.lower() =="y":
             return 1
-    return 1
+
+def get_single_coor(coor: str):
+    while True:
+        coor_input = input(f"Ingresa la coordenada {coor}: ")
+        if coor_input.isdigit():
+            coor = int(coor_input) # type: ignore
+            break
+        else:
+            print(f"Coordenada {coor} no es un número válido. Inténtalo de nuevo.")
+    return coor
+
+def get_orientation() -> int:
+    vertical = ['0','v','vertical', 'V', 'VERTICAL']
+    horizontal = ['1','h','horizontal', 'H', 'HORIZONTAL']
+    while True:
+        orientation_input = input(f"Ingresa la orientación: ")
+        if (orientation_input in vertical):
+            return 0
+        elif (orientation_input in horizontal):
+            return 1
+        else:
+            print("Orientación no es un número válido. Inténtalo de nuevo.")
 
 def get_coordinates(ship: str) -> dict:
     print(f"Construye {ship.upper()}")
     #TODO. un else x si la cadena viene vacia
-    coor_x = input(f"Ingresa la coordenada x: ")
-    coor_y = input(f"Ingresa la coordenada y: ")
+    coor_x = get_single_coor("x")
+    coor_y = get_single_coor("y")
+
     if ship == "barco patrulla":
-        return {ship[0]: [int(coor_x), int(coor_y), 0]}
+        return {ship[0]: [coor_x, coor_y, 1]}
     else:
-        orientation = input(f"Ingresa la orientacion: ")
-        return {ship[0]: [int(coor_x), int(coor_y), int(orientation)]}
+        orientation = get_orientation()
+        return {ship[0]: [coor_x, coor_y, orientation]}
+
+def make_attack():
+    coor_x = get_single_coor("x")
+    coor_y = get_single_coor("y")
+    return [coor_x, coor_y]
 
 def build_ships() -> dict:
     ships_dict = {}
@@ -60,20 +82,22 @@ class ClientMessage():
                 self.ships = build_ships()
                 return msg_json(self.action, self.bot, self.ships, [])
             
-            #TODO. ATTACK, se necesita status, 3: Coloco los barcos...
             elif self.action == "a" and client.status == 3:
-                return msg_json(self.action, self.bot, self.ships, [])
+                self.position = make_attack()
+                return msg_json(self.action, self.bot, self.ships, self.position)
             
-            #TODO. Lose o rendirse, pasara a estado conectado, se resetean todos los stats
+            ### Jugar aqui
+            ### Primero jugar contra bot
+
             elif self.action == "l":
                 return msg_json(self.action, self.bot, self.ships, [])
 
             elif self.action == "d":
+                # Si client.status == 0??
                 return msg_json(self.action, self.bot, self.ships, [])
             
             else:
-                # En cualquier otro caso, se conecta con el servidor
-                # arreglar es
+                #TODO. En cualquier otro caso, se conecta con el servidor
                 return msg_json("c", 0, {}, [])
         else:
             return msg_json(self.action, self.bot, self.ships, [])
