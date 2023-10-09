@@ -1,19 +1,8 @@
 from dataclasses import dataclass, field
 from clases.Ship import Ship
-from clases.Coordinates import Coordinates
+
 @dataclass
 class Player:
-    """Clase Jugador\n
-    Status:
-    0: Desconectado
-    1: Conectado
-    2: Eligio modo de juego
-    3: Puso barcos
-    4: Esta jugando\n
-    Match_type:
-    1: PvB
-    0: PvP
-    """
     status: int = 0 
     match_type: int = 1 # 1: PvB, 0: PvP
     player_id: str = "" 
@@ -27,6 +16,9 @@ class Player:
     def select_match_type(self, match_type):
         self.match_type = match_type
         return self
+    
+    def has_created_ships(self):
+        return True if (len(self.ships) > 0) else False
 
     def __str__(self):
         match_type_str = 'Player vs Bot' if self.match_type == 1 else 'Player vs Player'

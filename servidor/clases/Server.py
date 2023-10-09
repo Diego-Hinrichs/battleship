@@ -5,7 +5,7 @@ from clases.Match import Match
 from clases.Bot import Bot
 from clases.Coordinates import Coordinates
 from clases.utils import get_player
-import socket
+import socket, threading
 
 @dataclass
 class Server:
@@ -15,15 +15,28 @@ class Server:
     server_ip: str = "127.0.0.1"
     server_port: int = 20001
     buffersize: int = 1024
-    used_ports: dict = field(default_factory=dict) # Registro de jugadores que no estan con estado conectado (0)
-    active_games: list[Match] = field(default_factory=list[Match]) # lista de match
-    online_players: list[Player] = field(default_factory=list[Player] ) # Jugadores conectados
-    list_of_actions = ["a", "b", "c", "d", "l", "s"]
+    active_games: list[Match] = field(default_factory=list[Match])
+    online_players: list[Player] = field(default_factory=list[Player])
+    list_of_actions= ["a", "b", "c", "d", "l", "s"]
+    inactivity_timeout: int = 3
+
+    def start_inactivity_timer(self, player):
+        player.inactivity_timer = threading.Timer(self.inactivity_timeout, self.disconnect_player_due_to_inactivity, args=(player,))
+        player.inactivity_timer.start()
+
+    def reset_inactivity_timer(self, player):
+        if player.inactivity_timer:
+            player.inactivity_timer.cancel()
+        self.start_inactivity_timer(player)
+
+    def disconnect_player_due_to_inactivity(self, player):
+        self.online_players.remove(player)
+        print(f"Jugador {player.player_id} desconectado debido a inactividad.")
+        #TODO. Si se desconecta en partida el otro jugador gana y pasa a conectado (0)
 
     def start_server(self):
         udp_server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         udp_server_socket.bind((self.server_ip, self.server_port))
-        self.used_ports.update({self.server_port: True})
         return udp_server_socket
 
     def validate_action(self, msg) -> tuple[bool, str]:
@@ -46,12 +59,13 @@ class Server:
         return CON_TUPLE
     
     def connect_player(self, client_address: tuple) -> bool:
+        print(self.online_players)
         player_id = f"{client_address[0]}:{str(client_address[1])}"
-        if not self.used_ports.get(player_id):
-            self.used_ports.update({player_id: True})
-            player = Player(player_id=player_id, remaining_lives=6, ships=[])
-            player.update_status(1)
-            self.online_players.append(player)
+        new_player = Player(player_id=player_id, remaining_lives=6, ships=[])
+        if not new_player in self.online_players:
+            new_player.update_status(1)
+            self.online_players.append(new_player)
+            self.start_inactivity_timer(new_player)
             return True
         else:
             print(f"Puerto (id): {player_id}, ya se encuentra conectado")
@@ -89,7 +103,6 @@ class Server:
             player.ships = temp_board.ships
             self.online_players[index] = player
             player.update_status(3)
-            print(player)
             return True
 
     def attack(self, match: Match, coor: Coordinates | None) -> bool:
@@ -99,9 +112,8 @@ class Server:
             ships = match.player_2.ships
             for ship in ships:
                 if coor in ship.list_coordinates:
-                    if match.player_2.remaining_lives == 0:
-                        return True # Gano el Jugador
                     match.player_2.remaining_lives -=1
+                    print(f"Jugador acerto en: {coor}")
                     return True
             return False
 
@@ -113,21 +125,18 @@ class Server:
             for ship in ships:
                 if coor in ship.list_coordinates:
                     match.player_1.remaining_lives -=1
-                    print(f"Bot acerto en: {coor}. Vidas del oponente: {match.player_1.remaining_lives}")
-                    if match.player_1.remaining_lives == 0:
-                        return True # Gano el bot
+                    print(f"Bot acerto en: {coor}")
                     return True
             print(f"Bot no acerto en: {coor}")
             return False
         else:
-            print(f"Algo salio mal -> class Server: linea 123")
+            print(f"Algo salio mal -> class Server: linea 118")
             return False
     
     def disconnect_player(self, client_address: tuple) -> bool:
         player_id = f"{client_address[0]}:{str(client_address[1])}"
-        player_to_disconnect, _ = get_player(self.online_players, player_id)
+        player_to_disconnect, index = get_player(self.online_players, player_id)
         if player_to_disconnect is not None:
-            self.used_ports.update({player_id: False})
             if player_to_disconnect in self.online_players:
                 self.online_players.remove(player_to_disconnect)
                 print(f"Se ha desconectado (id):\t{player_id}")

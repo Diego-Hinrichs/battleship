@@ -36,7 +36,7 @@ class Bot:
 
         self.ships.extend(generated_ships)
 
-    def get_random_attack_coordinates(self):
+    def get_random_attack_coordinates(self) -> Coordinates:
         while True:
             x = random.randint(0, self.board.size-1)
             y = random.randint(0, self.board.size-1)
