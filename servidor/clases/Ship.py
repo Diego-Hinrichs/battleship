@@ -4,17 +4,17 @@ from clases.Coordinates import Coordinates
 @dataclass
 class Ship:
     size: int
+    type: str
     list_coordinates: list[Coordinates] = field(default_factory=list[Coordinates])
     orientation: int = 0 # Vertical
-    type: str = "Barco patrulla"
     
+    #TODO. Esto deberia estar en la clase coordinates
     def is_overlaped(self, overlap: list[Coordinates]):
         if len(overlap) == 0:
             return False
         else:
             return any(coord in overlap for coord in self.list_coordinates)
 
-    #TODO. Esto deberia estar en la clase coordinates
     def coordinates_list(self, coord: Coordinates):
         # Lista de coordenadas del barco si es horizontal
         if self.orientation == 1:

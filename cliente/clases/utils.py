@@ -11,16 +11,6 @@ def select_match_type() -> int:
         elif option.lower() =="y":
             return 1
 
-def get_single_coor(coor: str):
-    while True:
-        coor_input = input(f"Ingresa la coordenada {coor}: ")
-        if coor_input.isdigit():
-            coor = int(coor_input) # type: ignore
-            break
-        else:
-            print(f"Coordenada {coor} no es un número válido. Inténtalo de nuevo.")
-    return coor
-
 def get_orientation() -> int:
     vertical = ['0','v','vertical', 'V', 'VERTICAL']
     horizontal = ['1','h','horizontal', 'H', 'HORIZONTAL']
@@ -33,13 +23,23 @@ def get_orientation() -> int:
         else:
             print("Orientación no es un número válido. Inténtalo de nuevo.")
 
+def get_single_coor(coor: str):
+    while True:
+        coor_input = input(f"Ingresa la coordenada {coor}: ")
+        if coor_input.isdigit():
+            coor = int(coor_input) # type: ignore
+            break
+        else:
+            print(f"Coordenada {coor} no es un número válido. Inténtalo de nuevo.")
+    return coor
+
 def get_coordinates(ship: str) -> dict:
     print(f"Construye {ship.upper()}")
     #TODO. un else x si la cadena viene vacia
     coor_x = get_single_coor("x")
     coor_y = get_single_coor("y")
 
-    if ship == "barco patrulla":
+    if ship == "patrulla":
         return {ship[0]: [coor_x, coor_y, 1]}
     else:
         orientation = get_orientation()
@@ -52,8 +52,8 @@ def make_attack():
 
 def build_ships() -> dict:
     ships_dict = {}
-    ships_dict.update(get_coordinates("portaviones"))
+    ships_dict.update(get_coordinates("patrulla"))
+    ships_dict.update(get_coordinates("barco"))
     ships_dict.update(get_coordinates("submarino"))
-    ships_dict.update(get_coordinates("barco patrulla"))
     print(ships_dict)
     return ships_dict

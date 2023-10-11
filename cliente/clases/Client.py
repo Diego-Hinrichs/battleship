@@ -4,10 +4,9 @@ import json
 
 @dataclass
 class Client:
-    status: int = 0 # 0: Desconectado; 1: Conectado; 2: Eligió modo de juego; 3: Puso barcos; 4: Esta jugando -> Si pierde pasa a 0: Desconectado
+    status: int = 0 # 0: Desconectado; 1: Conectado; 2: Eligió modo de juego; 3: Puso barcos y esta en partida -> Si pierde pasa a 0: Desconectado
     match_type: int = 0 # PvP o PvB
     remaining_lives: int = 6
-    opponent_lives_remaining: int = 6
     list_of_actions = ["a", "b", "c", "d", "l", "s"]
     socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 
@@ -31,17 +30,11 @@ class Client:
             
             elif (recieved_action == "b") and recieved_status:
                 self.status = 3 # Barcos buenardos
-                self.status = 4 # En partida xD
                 return True
 
             elif (recieved_action == "a"):
                 if recieved_status == 1 and recieved_msg['position']!=0:
                     print(f"Acertaste tu último ataque: {recieved_msg['position']}")
-                    self.opponent_lives_remaining -= 1
-                    if self.opponent_lives_remaining == 0:
-                        print(f"Ganaste!!")
-                        print(f"Selecciona partida para continuar o desconectate [s/d]: ")
-                        self.__init__(status=1) # Pasar a estado conectado, reset de status
                 elif recieved_status == 0:
                     print(f"No acertaste :(")
 

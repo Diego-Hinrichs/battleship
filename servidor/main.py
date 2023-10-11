@@ -13,47 +13,27 @@ def send_msg(client_address, action, status, position):
     response = ServerMessage(action=action, status=status, position=position).make_message()
     udp_server_socket.sendto(response.encode(encoding='utf-8', errors='strict'), client_address)
 
-def is_match_finish(match: Match):
-    pl1 = match.player_1.remaining_lives
-    pl2 = match.player_2.remaining_lives
-    if pl2 == 0:
-        return (True, pl1)
-    elif pl1 == 0:
-        return (True, pl2)
-    else:
-        return (False, None)
+#TODO. esto se va para el server dps, separar partida vs bot de partida vs player
+def start_new_game_pvb(player):
+    bot = Bot()
+    bot.build_random_ship()
+    match = Match(match_id=player_id, player_1=player, player_2=bot, current_turn=player)
+    server.active_games.append(match)
 
-def start_new_game(client_address):
-    player_id = f"{client_address[0]}:{str(client_address[1])}"
-    player, _ = get_player(server.online_players, player_id)
-    if player.match_type == 1:
-        bot = Bot()
-        bot.build_random_ship()
-        player.update_status(4)
-        match = Match(match_id=player_id, player_1=player, player_2=bot, current_turn=player)
-        server.active_games.append(match)
-        print(bot)
-
-    if player.status == 4:
-        print(f"El jugador {player_id} ya está en una partida.")
-        return
-    
+def start_new_game_pvp(player):
     if not player.has_created_ships():
         print(f"El jugador {player_id} debe crear sus barcos antes de iniciar una partida.")
         return
 
-    for other_player in server.online_players:
-        if other_player.match_type == 0 and other_player != player and other_player.has_created_ships():
-            # Crear una partida
-            player.update_status(4)
-            other_player.update_status(4)
-            match = Match(match_id=f"{player_id}_{other_player.player_id}", player_1=player, player_2=other_player, current_turn=player)
+    #Jugar Player vs Player
+    for player_2 in server.online_players:
+        if player_2.match_type == 0 and player_2 != player and player_2.has_created_ships():
+            player.update_status(4) # Estado = jugando
+            player_2.update_status(4) 
+            #TODO. El player 1 inicia el juego, ojito
+            match = Match(match_id=f"{player_id}_{player_2.player_id}", player_1=player, player_2=player_2, current_turn=player)
             server.active_games.append(match)
-            player.match_type = 1
-            other_player.match_type = 1
-            print(f"Se ha creado una partida entre {player_id} y {other_player.player_id}")
-            print(match.player_1)
-            print(match.player_2)
+            print(f"Se ha creado una partida:\nPlayer 1: {player.player_id}\nPlayer 2: {player_2.player_id}")
             return
 
 while(True):
@@ -77,7 +57,12 @@ while(True):
             status = 1 if server.build_ships(client_address, msg) else 0
             send_msg(client_address, action, status=status, position=[])
             if status == 1:
-                start_new_game(client_address)
+                player_id = f"{client_address[0]}:{str(client_address[1])}"
+                player, _ = get_player(server.online_players, player_id)
+                if player.match_type == 1:
+                    start_new_game_pvb(player)
+                elif player.match_type == 0:
+                    start_new_game_pvp(player)
 
         elif action == "a":
             game: Match
@@ -85,18 +70,25 @@ while(True):
             player_id = f"{client_address[0]}:{str(client_address[1])}"
             player, index = get_player(server.online_players, player_id)
             coor = Coordinates(coor_in[0], coor_in[1])
-            for game in server.active_games: 
-                if player_id == game.match_id:
-                    valid = server.attack(match=game, coor=coor) # Ataque del usuario
+            for game in server.active_games:
+                match_id = game.match_id.split("_")
+                # En PvB match_id == player_id
+                if player_id == game.match_id and game.match_type == 1 and player.match_type == 1:
+                    print(match_id)
+                    # Ataque del usuario
+                    valid = server.user_attack(match=game, coor=coor)
                     send_msg(client_address, action, status=1 if valid else 0, position=coor_in)
-                    server.attack(match=game, coor=None) # Ataca el bot despues de enviar el msj
-                    finish, _ = is_match_finish(game)
+                    # Ataca el bot despues de enviar el msj
+                    server.bot_attack(match=game, coor=None)
+                if player_id in match_id:
+                    valid = server.user_attack(match=game, coor=coor)
+                    send_msg(client_address, action, status=1 if valid else 0, position=coor_in)
+                    print(player_id)
 
         elif action == "d":
             status = 1 if server.disconnect_player(client_address) else 0
             send_msg(client_address, action, status=status, position=[])
 
     else:
-        ### Mensaje de accion invalida...
         send_msg(client_address, action, status=0, position=[])
     

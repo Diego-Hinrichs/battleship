@@ -3,7 +3,7 @@ from clases.Ship import Ship
 
 @dataclass
 class Player:
-    status: int = 0 
+    status: int = 0  # 0: Desconectado; 1: Conectado; 2: Eligió modo de juego; 3: Puso barcos y esta en partida 4: En partida -> Si pierde pasa a 0: Desconectado
     match_type: int = 1 # 1: PvB, 0: PvP
     player_id: str = "" 
     remaining_lives: int = 6
@@ -21,17 +21,10 @@ class Player:
         return True if (len(self.ships) > 0) else False
 
     def __str__(self):
-        match_type_str = 'Player vs Bot' if self.match_type == 1 else 'Player vs Player'
-        player_str = f"{'Tipo de partida:':<17}{match_type_str}\n" \
-                     f"{'Vidas:':<17}{self.remaining_lives}\n"
-        
-        player_str = f"==============\t{self.player_id}\t ==============\n" \
-                f"Vidas restantes del Jugador: {self.remaining_lives}\n"
-        
+        player_str = f"==============\t{self.player_id}\t ==============\n"
         for i, ship in enumerate(self.ships, start=1):
-            player_str += f"Tipo: {ship.type.upper()} -- "
+            player_str += f"Tipo: {ship.type.upper()} --> "
             player_str += f"Coordenadas: {[c for c in ship.list_coordinates]}\n"
-        
         return player_str
 
 

@@ -1,13 +1,18 @@
 from clases.ClientMsg import ClientMessage
 from clases.Client import Client
 import json, sys, signal
+from dotenv import load_dotenv
+import os
 
 # https://docs.python.org/3/library/socket.html
 # https://pythontic.com/modules/socket/recvfrom
 
-server_ip = "127.0.0.1"
-server_port = 20001
-server_address = (server_ip, server_port)
+load_dotenv(dotenv_path="../.env")
+SERVER_LOCAL = os.getenv("SERVER_LOCAL")
+SERVER_UNIVERSIDAD = os.getenv("SERVER_UNIVERSIDAD")
+SERVER_PORT = os.getenv("SERVER_PORT")
+
+server_address = (SERVER_LOCAL, int(SERVER_PORT)) # type: ignore
 client = Client()
 upd_client_socket = client.socket
 
@@ -17,17 +22,17 @@ def send_msg(response, upd_client_socket, server_address):
 
 def handle_ctrl_c(sig, frame):
     print("\nCtrl+C presionado. Enviando mensaje de despedida al servidor...")
-    msg_to_send = ClientMessage(action="d").make_message(client)
+    msg_to_send = ClientMessage(action="d", bot=0, ships={}, position=[]).make_message(client)
     send_msg(msg_to_send, upd_client_socket, server_address)
     sys.exit(0)
 
 # Registra el manejador de señal para Ctrl+C
 signal.signal(signal.SIGINT, handle_ctrl_c)
 
-print(f"Iniciando conexion con {server_ip} en el puerto {server_port}")
+print(f"Iniciando conexion con {SERVER_LOCAL} en el puerto {SERVER_PORT}")
 
 while(True):
-    action = str(input(f"{server_ip}:{server_port:<6}{'~ $':<4}")).lower()
+    action = str(input(f"{SERVER_LOCAL}:{SERVER_PORT:<6}{'~ $':<4}")).lower()
     msg_to_send = ClientMessage(action=action).make_message(client)
     send_msg(msg_to_send, upd_client_socket, server_address)
     recieved_msg, server_address = upd_client_socket.recvfrom(1024)

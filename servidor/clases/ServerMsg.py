@@ -1,13 +1,10 @@
 from dataclasses import dataclass, field
-import json
-
-def msg_json(action: str, status: int, position: list) -> str:
-    return json.dumps({"action": action, "status": status, "position": position})
+from clases.utils import msg_json
 
 @dataclass
 class ServerMessage():
     action: str = "c"
-    status: int = 0 # 0: Mal o 1: Bien 
+    status: int = 0
     position: list = field(default_factory=list)
     
     def make_message(self):
