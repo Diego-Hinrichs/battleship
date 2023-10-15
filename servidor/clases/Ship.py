@@ -38,7 +38,8 @@ class Ship:
             return self
         
     def __str__(self) -> str:
-        return  f"Tamaño: {self.size}\n"\
-                f"Orientacion: {'Horizontal' if self.orientation else 'Vertical'}\n"\
-                f"Tipo: {self.type}\n" \
-                f"Coordenadas: {[c for c in self.list_coordinates]}\n"
+        ship_str = f"Tamaño: {self.size}, " 
+        ship_str += f"Orientacion: {'Horizontal' if self.orientation else 'Vertical'}, "
+        ship_str += f"Tipo: {self.type}, "
+        ship_str += f"Coordenadas: {[c for c in self.list_coordinates]}"
+        return ship_str                

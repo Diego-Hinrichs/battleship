@@ -2,10 +2,8 @@ from clases.ClientMsg import ClientMessage
 from clases.Client import Client
 import json, sys, signal
 from dotenv import load_dotenv
+import socket
 import os
-
-# https://docs.python.org/3/library/socket.html
-# https://pythontic.com/modules/socket/recvfrom
 
 load_dotenv(dotenv_path="../.env")
 SERVER_LOCAL = os.getenv("SERVER_LOCAL")
@@ -29,12 +27,14 @@ def handle_ctrl_c(sig, frame):
 # Registra el manejador de señal para Ctrl+C
 signal.signal(signal.SIGINT, handle_ctrl_c)
 
-print(f"Iniciando conexion con {SERVER_LOCAL} en el puerto {SERVER_PORT}")
+print(f"Iniciando conexión con {SERVER_LOCAL} en el puerto {SERVER_PORT}")
 
 while(True):
     action = str(input(f"{SERVER_LOCAL}:{SERVER_PORT:<6}{'~ $':<4}")).lower()
     msg_to_send = ClientMessage(action=action).make_message(client)
+    #print(msg_to_send)
     send_msg(msg_to_send, upd_client_socket, server_address)
+
     recieved_msg, server_address = upd_client_socket.recvfrom(1024)
     #TODO. Si no me envian confirmacion en x tiempo
     msg = json.loads(recieved_msg.decode(encoding='utf-8', errors='strict'))

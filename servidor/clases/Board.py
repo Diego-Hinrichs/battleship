@@ -8,7 +8,7 @@ class Board:
         self.__overlap_coordinates = []
         self.ships = []
         self.size = size
-        self.ships_sizes = {'s': 3, 'b': 2, 'p': 1}
+        self.ships_sizes = {'p': 1, 'b': 2, 's': 3}
 
     #TODO. Todo esto deberia esta en la clase ships
     def add_overlap_coordinate(self, coordinate: Coordinates):
