@@ -9,7 +9,6 @@ class Game:
     player_2: Player | Bot
     current_turn: str
     game_type: int = 1 # 1: PvB, 0: PvP
-    surrender: str = " "
 
     def __post_init__(self):
         if isinstance(self.player_2, Bot):

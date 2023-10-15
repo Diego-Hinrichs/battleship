@@ -6,7 +6,7 @@ from clases.Bot import Bot
 from clases.Coordinates import Coordinates
 from clases.utils import get_player
 from dotenv import load_dotenv
-import socket, os, time
+import socket, os
 
 load_dotenv(dotenv_path="../.env")
 SERVER_LOCAL = os.getenv("SERVER_LOCAL")
