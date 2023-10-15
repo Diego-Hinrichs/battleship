@@ -23,3 +23,5 @@ def get_game(active_games: list[Game], game_id: str) -> Game | None:
         
 def msg_json(action: str, status: int, position: list) -> str:
     return json.dumps({"action": action, "status": status, "position": position})
+
+

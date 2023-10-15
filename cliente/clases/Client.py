@@ -40,14 +40,15 @@ class Client:
                 elif recieved_status == 0:
                     print(f"No acertaste")
                     print(f"pregunta tu turno (t), si ya ganaste (w) o te rindes (l)")
+                else:
+                    print(f"Algo ha malido sal, intenta de nuevo")
 
             elif (recieved_action == "t"):
                 your_turn = 'Tu turno' if recieved_status == 1 else 'Aún no puedes jugar'
                 print(your_turn)
 
             elif (recieved_action == "w"):
-                win = 'Ganaste' if recieved_status == 1 else 'Aun no ganas'
-                print(win)
+                win = 'Ganaste' if recieved_status == 1 else 'Aún no ganas'
                 if win == 'Ganaste':
                     print(f"Felicidades has ganado\nPasas a estado desconectado, puedes conectarte nuevamente con (c):")
                     self.__init__(status=0, game_type=0, remaining_lives=6) # Reset                

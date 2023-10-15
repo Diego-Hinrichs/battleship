@@ -6,7 +6,7 @@ from clases.Bot import Bot
 from clases.Coordinates import Coordinates
 from clases.utils import get_player
 from dotenv import load_dotenv
-import socket, os
+import socket, os, time
 
 load_dotenv(dotenv_path="../.env")
 SERVER_LOCAL = os.getenv("SERVER_LOCAL")
@@ -17,13 +17,40 @@ SERVER_PORT = os.getenv("SERVER_PORT")
 # Se realiza con IP:PORT
 @dataclass
 class Server:
-    server_ip: str | None = SERVER_LOCAL
-    server_port: str | None = SERVER_PORT
-    buffersize: int = 1024
+    server_ip: str | None
+    server_port: str | None
+    buffersize: int
     active_games: list[Game] = field(default_factory=list[Game])
     online_players: list[Player] = field(default_factory=list[Player])
-    list_of_actions = ["a", "b", "c", "d", "t", "w", "l", "s"]
-    inactivity_timeout: int = 3
+    
+    def __init__(self):
+        self.server_ip = SERVER_LOCAL
+        self.server_port = SERVER_PORT
+        self.buffersize = 1024
+        self.active_games = []
+        self.online_players = []
+        self.list_of_actions = ["a", "b", "c", "d", "t", "w", "l", "s"]
+    
+    def start_new_game_pvp(self, player: Player):
+        for player_1 in self.online_players:
+            if player_1.game_type == 1 or player_1.status == 4:
+                continue
+            if player_1.game_type == 0 and player_1 != player and player_1.status == 3:
+                player.update_status(4)
+                player_1.update_status(4)
+                game = Game(game_id=f"{player.player_id}_{player_1.player_id}", game_type=0, player_1=player_1, player_2=player, current_turn=player_1.player_id)
+                self.active_games.append(game)
+                print(f"Se ha creado una partida:\nPlayer 1: {player_1.player_id}\nPlayer 2: {player.player_id}")
+            else:
+                print(f"No hay jugadores esperando partida")
+
+    def start_new_game_pvb(self, player: Player):
+        if player.status == 3:
+            bot = Bot()
+            bot.build_random_ship()
+            game = Game(game_id=player.player_id, player_1=player, player_2=bot, current_turn=player.player_id)
+            self.active_games.append(game)
+            player.update_status(4)
 
     def start_server(self):
         udp_server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -73,10 +100,12 @@ class Server:
             return False
 
     def build_ships(self, client_address: tuple, msg: dict) -> bool:
-        ships_in = msg['ships'] if len(msg['ships']) == 3 else {}
+        ships_in = msg['ships']
+        if len(ships_in) == 0: 
+            return False
         player, index = get_player(self.online_players, client_address)
         temp_board = Board()
-        new_board = temp_board.make_ships(ships_in)
+        new_board = temp_board.make_ships(ships_in) # Overlap, fuera de rango y demases
         if not new_board:
             return False
         else:
@@ -86,9 +115,6 @@ class Server:
             return True
 
     def user_attack(self, game: Game, coor: Coordinates) -> bool:
-        print(game.current_turn == game.player_1.player_id)
-        print(game.current_turn == game.player_2.player_id)
-
         if game.current_turn == game.player_1.player_id:
             game.switch_turn()
             ships = game.player_2.ships
@@ -105,6 +131,7 @@ class Server:
             ships = game.player_1.ships
             for ship in ships:
                 if coor in ship.list_coordinates:
+                    ship.list_coordinates.remove(coor)
                     game.player_1.remaining_lives -=1
                     print(f"Jugador {game.player_2.player_id} acertó en: {coor}\n")
                     return True

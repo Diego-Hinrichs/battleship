@@ -25,7 +25,7 @@ class Console():
                 stats += f"\nJuegos activos: {len(self.server.active_games)}"
                 if len(self.server.active_games) > 0:
                     for game in self.server.active_games:
-                        stats += f"\n id del juego: {game.game_id}"
+                        stats += f"\nid del juego: {game.game_id}"
                 else:
                     stats += f"\nNo hay juegos activos"
                 print(stats)
@@ -54,7 +54,7 @@ class Console():
             elif command == 'jugadores':
                 if len(self.server.online_players) > 0:
                     for player in self.server.online_players:
-                        print(f"Jugador: {player.player_id}")
+                        print(f"Jugador {player.player_id}")
                 else:
                     print(f"No hay jugadores en línea")
 
@@ -64,11 +64,13 @@ class Console():
                 if game != None:
                     print(f"---- Barcos jugador 1, vidas: {game.player_1.remaining_lives} ----")
                     for ship in game.player_1.ships:
-                        print(f"{ship}")
+                        for coord in ship.list_coordinates:
+                            print(f"{coord}")
 
                     print(f"---- Barcos jugador 2, vidas: {game.player_2.remaining_lives} ----")
                     for ship in game.player_2.ships:
-                        print(f"{ship}")
+                        for coord in ship.list_coordinates:
+                            print(f"{coord}")
                 else:
                     print(f"Partida no encontrada")
 

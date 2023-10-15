@@ -17,18 +17,12 @@ class Player:
         self.game_type = game_type
         return self
     
-    def has_created_ships(self):
-        return True if (len(self.ships) > 0) else False
-
     def __str__(self):
         game_type = 'Player vs Bot' if self.game_type == 1 else 'Player vs Player'
         player_str = f"============== Jugador {self.player_id} ==============\n"
         player_str += f"Tipo de partida: {game_type}\n"
         player_str += f"Estado: {self.status}\n"
         player_str += f"Vidas restantes: {self.remaining_lives}\n"
-        for i, ship in enumerate(self.ships, start=1):
-            player_str += f"Tipo: {ship.type.upper()} --> "
-            player_str += f"Coordenadas: {[c for c in ship.list_coordinates]}\n"
         return player_str
 
 

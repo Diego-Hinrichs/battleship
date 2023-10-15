@@ -15,4 +15,4 @@ class Coordinates:
         yield self.y
 
     def __str__(self) -> str:
-        return f"(Coordenada: {self.x},{self.y})"
+        return f"({self.x},{self.y})"

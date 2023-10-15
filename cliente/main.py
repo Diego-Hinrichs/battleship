@@ -38,4 +38,5 @@ while(True):
     recieved_msg, server_address = upd_client_socket.recvfrom(1024)
     #TODO. Si no me envian confirmacion en x tiempo
     msg = json.loads(recieved_msg.decode(encoding='utf-8', errors='strict'))
+    #print(msg)
     client.update_status(msg, msg_to_send) # Retorna algo al cliente
