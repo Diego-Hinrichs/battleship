@@ -52,8 +52,11 @@ while True:
         player, index = get_player(server.online_players, client_address)
         game = get_game(server.active_games, player) # type: ignore
         if action == "c":
-            status = 1 if server.connect_player(client_address) else 0
-            send_msg(udp_server_socket, client_address, action, status=status, position=[])
+            if len(server.active_games) > 0:
+                send_msg(udp_server_socket, client_address, action, status=0, position=[])
+            else:
+                status = 1 if server.connect_player(client_address) else 0
+                send_msg(udp_server_socket, client_address, action, status=status, position=[])
 
         elif action == "s":
             status = 1 if server.select_game(client_address, msg) else 0

@@ -80,8 +80,6 @@ class Server:
         print(f"El jugador {player_id} se ha conectado")
         return True
 
-    #TODO. control de partidas simultaneas x usuario
-
     def select_game(self, client_address: tuple, msg: dict)-> bool:
         player: Player
         player, index = get_player(self.online_players, client_address)
