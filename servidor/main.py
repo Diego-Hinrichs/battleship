@@ -45,6 +45,7 @@ def player_vs_player(game: Game, player: Player, client_address, coor_in):
 while True:
     received_msg, client_address = udp_server_socket.recvfrom(1024)
     msg = json.loads(received_msg.decode(encoding='utf-8', errors='strict'))
+    print(msg)
     is_valid_action, action = server.validate_action(msg)
 
     if is_valid_action:
@@ -52,7 +53,7 @@ while True:
         player, index = get_player(server.online_players, client_address)
         game = get_game(server.active_games, player) # type: ignore
         if action == "c":
-            if len(server.active_games) > 0:
+            if len(server.online_players) > 2 or len(server.active_games) == 1: # Limitar la conexion a 2 jugadores o 1 juego activo
                 send_msg(udp_server_socket, client_address, action, status=0, position=[])
             else:
                 status = 1 if server.connect_player(client_address) else 0

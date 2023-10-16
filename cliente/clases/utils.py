@@ -1,7 +1,7 @@
 import json
 
 def msg_json(action: str, bot: int, ships: dict, position: list) -> str:
-    return json.dumps({"action": action, "bot": bot, "ships": ships, "position": position})
+    return json.dumps({"action": action, "bot": bot, "ships": ships, "position": position, "reserva1": " ", "reserva2": " "})
 
 def select_game_type() -> int:
     while(True):
