@@ -12,16 +12,28 @@ def get_player(online_players: list[Player], client_address: tuple) -> tuple[Pla
             player_index = index
     return (player_out, player_index)
 
-def get_game(active_games: list[Game], game_id: str) -> Game | None:
-    game: Game
-    if len(active_games) > 0:
-        for game in active_games:
-            if game.game_id == game_id:
-                return game
-    else:
+def get_game(active_games, player: Player):
+    if len(active_games) == 0:
         return None
+    for game in active_games:
+        if game.game_id == player.player_id:
+            return game
+        elif player.player_id in game.game_id.split("_"):
+            return game
         
+def remove(server, game: Game, player: Player):
+    server.active_games.remove(game)
+    server.online_players.remove(player)
+
+def winner(server, game: Game, player: Player) -> bool:
+    if game.win(player.player_id):
+        for player_to_remove in game:
+            if player.player_id == player_to_remove.player_id and isinstance(player_to_remove, Player):
+                server.online_players.remove(player_to_remove)
+        server.active_games.remove(game)
+        return True
+    else:
+        return False
+
 def msg_json(action: str, status: int, position: list) -> str:
     return json.dumps({"action": action, "status": status, "position": position})
-
-

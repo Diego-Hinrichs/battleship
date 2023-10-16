@@ -1,8 +1,17 @@
-from clases.utils import get_game, get_player
+from clases.utils import get_player
 from clases.Game import Game
 from clases.Player import Player
 from clases.Server import Server
 import readline, threading
+
+def get_game(active_games: list[Game], game_id: str) -> Game | None:
+    game: Game
+    if len(active_games) > 0:
+        for game in active_games:
+            if game.game_id == game_id:
+                return game
+    else:
+        return None
 
 class Console():
 
@@ -41,6 +50,7 @@ class Console():
                     for game in self.server.active_games:
                         stats += f"\nJuego {game.game_id} - "
                         stats += f"Tipo de juego: {game.game_type} "
+                        stats += f"\n -> Barcos {game.game_id}"
                     print(stats)
                 else:
                     print(f"No hay juegos activos")

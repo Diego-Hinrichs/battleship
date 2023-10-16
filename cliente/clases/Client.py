@@ -30,7 +30,7 @@ class Client:
                 print(f"{'Player vs Bot' if self.game_type else 'Player vs Player'}")
             
             elif (recieved_action == "b") and recieved_status == 1:
-                self.status = 4 # depende del tipo de partida ...
+                self.status = 4
                 print(f"Barcos correctos, consulta tu turno (t)")
 
             elif (recieved_action == "a"):
