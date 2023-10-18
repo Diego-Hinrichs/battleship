@@ -10,7 +10,6 @@ import socket, os
 
 load_dotenv(dotenv_path="../.env")
 SERVER_LOCAL = os.getenv("SERVER_LOCAL")
-SERVER_UNIVERSIDAD = os.getenv("SERVER_UNIVERSIDAD")
 SERVER_PORT = os.getenv("SERVER_PORT")
 
 # TODO. DEFINIR CUANTAS PARTIDAS PODRA JUGAR UN UNICO CLIENTE EN SIMULTANEO

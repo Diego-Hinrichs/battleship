@@ -11,7 +11,6 @@ class Client:
     socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 
     def update_status(self, recieved_msg, msg_sent):
-        #print(recieved_msg)
         recieved_action = recieved_msg["action"]
         msg_sent = json.loads(msg_sent)
 
@@ -34,7 +33,7 @@ class Client:
                 print(f"Barcos correctos, consulta tu turno (t)")
 
             elif (recieved_action == "a"):
-                if recieved_status == 1 and recieved_msg['position'] != 0:
+                if recieved_status == 1:
                     print(f"Acertaste tu último ataque: {recieved_msg['position']}")
                     print(f"pregunta tu turno (t), si ya ganaste (w) o te rindes (l)")
                 elif recieved_status == 0:

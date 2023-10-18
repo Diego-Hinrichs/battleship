@@ -7,7 +7,6 @@ import os
 
 load_dotenv(dotenv_path="../.env")
 SERVER_LOCAL = os.getenv("SERVER_LOCAL")
-SERVER_UNIVERSIDAD = os.getenv("SERVER_UNIVERSIDAD")
 SERVER_PORT = os.getenv("SERVER_PORT")
 
 server_address = (SERVER_LOCAL, int(SERVER_PORT)) # type: ignore

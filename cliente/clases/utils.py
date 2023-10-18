@@ -5,10 +5,10 @@ def msg_json(action: str, bot: int, ships: dict, position: list) -> str:
 
 def select_game_type() -> int:
     while(True):
-        option = str(input("Quieres jugar contra un bot? [Y/n]: "))
-        if option.lower() == "n":
+        option = str(input("Quieres jugar contra un bot? [Y/n]: ")).lower()
+        if option == "n":
             return 0
-        elif option.lower() =="y":
+        elif option =="y":
             return 1
 
 def get_orientation() -> int:
