@@ -1,13 +1,19 @@
 from dataclasses import dataclass, field
 from clases.Ship import Ship
 
-@dataclass
 class Player:
-    status: int = 0  # 0: Desconectado; 1: Conectado; 2: Eligió modo de juego; 3: Puso barcos; 4: En partida -> Si pierde pasa a 0: Desconectado
-    game_type: int = 1 # 1: PvB, 0: PvP
-    player_id: str = "" 
-    remaining_lives: int = 6
-    ships: list[Ship] = field(default_factory=list[Ship])
+    status: int
+    game_type: int
+    player_id: str
+    ships: list[Ship]
+    remaining_lives: int
+
+    def __init__(self, status = 0, game_type = 0, player_id = "", ships = {}, remaining_lives = 6):
+        self.status = status # 0: Desconectado; 1: Conectado; 2: Eligió modo de juego; 3: Puso barcos; 4: En partida -> Si pierde pasa a 0: Desconectado
+        self.game_type = game_type
+        self.player_id = player_id
+        self.ships = ships
+        self.remaining_lives = remaining_lives
 
     def update_status(self, new_status):
         self.status = new_status

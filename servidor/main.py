@@ -3,7 +3,7 @@ from clases.Server import Server
 from clases.Game import Game
 from clases.Coordinates import Coordinates
 from clases.ServerMsg import ServerMessage
-from clases.utils import get_player, get_game, remove
+from clases.utils import get_player, get_game
 from console import Console
 import json
 
@@ -15,39 +15,37 @@ def send_msg(udp_server_socket, client_address, action, status, position):
     response = ServerMessage(action=action, status=status, position=position).make_message()
     udp_server_socket.sendto(response.encode(encoding='utf-8', errors='strict'), client_address)
 
-def player_vs_bot(server, game, player, client_address, coor_in):
+def update_player(index: int):
+    new_player = Player(status = 1, player_id = player.player_id)
+    server.online_players[index] = new_player
+
+def player_vs_bot(server, game: Game, player, index, client_address, coor_in):
     valid = server.user_attack(game=game, coor=coor)
-    if game.player_1.remaining_lives == 0:
-        remove(server, game, player)
+    if game.player_1.remaining_lives == 0: # Jugador
+        update_player(index)
+        server.active_games.remove(game)
         send_msg(udp_server_socket, client_address, "l", status=1, position=coor_in)
-    elif game.player_2.remaining_lives == 0:
-        remove(server,  game, player)
+    elif game.player_2.remaining_lives == 0: # Bot
+        update_player(index)
+        server.active_games.remove(game)
         send_msg(udp_server_socket, client_address, "w", status=1, position=coor_in)
     else:
         send_msg(udp_server_socket,client_address, action, status=1 if valid else 0, position=coor_in)
         server.bot_attack(game=game, coor=None)
 
-def player_vs_player(game: Game, player: Player, client_address, coor_in):
+def player_vs_player(game: Game, player, index, client_address, coor_in):
     # Ver si perdio en el turno anterior
     if game.lose(player.player_id):
         for player_to_remove in game:
             if player.player_id == player_to_remove.player_id and isinstance(player_to_remove, Player):
-                player.status = 1
-                player.remaining_lives = 6
-                player.game_type = 0
-                player.ships = {}
+                update_player(index)
                 server.active_games.remove(game)
         send_msg(udp_server_socket,client_address, "l", 1, position=coor_in)
 
     elif game.current_turn == player.player_id:
         valid = server.user_attack(game=game, coor=coor)
-        print(game.win(player.player_id) == 1)
         if game.win(player.player_id) == 1:
-            # pasar el jugador a estado desconectado
-            player.status = 1
-            player.remaining_lives = 6
-            player.game_type = 0
-            player.ships = {}
+            update_player(index)
             send_msg(udp_server_socket, client_address, "w", 1, position=coor_in)
         else:
             send_msg(udp_server_socket, client_address, action, status=1 if valid else 0, position=coor_in)
@@ -63,7 +61,7 @@ while True:
         player, index = get_player(server.online_players, client_address)
         game = get_game(server.active_games, player) # type: ignore
         if action == "c":
-            if len(server.online_players) > 2 or len(server.active_games) == 1: # Limitar la conexion a 2 jugadores o 1 juego activo
+            if len(server.online_players) >= 2 or len(server.active_games) == 1: # Limitar la conexion a 2 jugadores o 1 juego activo
                 send_msg(udp_server_socket, client_address, action, status=0, position=[])
             else:
                 status = 1 if server.connect_player(client_address) else 0
@@ -89,9 +87,9 @@ while True:
             else:
                 coor = Coordinates(coor_in[0], coor_in[1])
                 if player.player_id == game.game_id and game.game_type == 1: # PvB
-                    player_vs_bot(server, game, player, client_address, coor_in)
+                    player_vs_bot(server, game, player, index, client_address, coor_in)
                 elif player.player_id in game.game_id.split("_") and game.game_type == 0 and game.current_turn == player.player_id:
-                    player_vs_player(game, player, client_address, coor_in)
+                    player_vs_player(game, player, index, client_address, coor_in)
                 else:
                     send_msg(udp_server_socket, client_address, "t", 0, position=coor_in)
 
@@ -108,18 +106,18 @@ while True:
                     send_msg(udp_server_socket, client_address, action, 0, [])
 
         elif action == "l" and game != None:
-            if game.game_type == 1: # P v B
-                remove(server, game, player)
-                print(f"Ha ganado el bot xD")
+            if game.game_type == 1: # Bot
+                update_player(index)
+                server.active_games.remove(game)
                 send_msg(udp_server_socket, client_address, action, 1, [])
-            elif player.player_id in game.game_id.split("_") and game.game_type == 0:
+
+            elif player.player_id in game.game_id.split("_") and game.game_type == 0: # PvP
                 for player_in_game in game:
                     if player_in_game.player_id == player.player_id:
                         player_in_game.remaining_lives = 0
                         if game.current_turn == player.player_id:
                             game.switch_turn()
-                        if isinstance(player_in_game, Player):
-                            server.online_players.remove(player_in_game) # Eliminar al que tira surrender
+                            update_player(index)
                         send_msg(udp_server_socket, client_address, action, 1, [])
             else:
                 send_msg(udp_server_socket, client_address, action, 0, [])
@@ -129,14 +127,13 @@ while True:
                 win = game.win(player.player_id)
                 send_msg(udp_server_socket, client_address, action, win, [])
             elif player.player_id in game.game_id.split("_") and game.game_type == 0: # PvP
-                if winner(server, game, player):
+                win = game.win(player.player_id)
+                if win == 1:
                     send_msg(udp_server_socket, client_address, action, 1, position=[])
                 else:
-                    win = game.win(player.player_id)
                     send_msg(udp_server_socket, client_address, action, win, position=[])
 
         elif action == "d":
-            print(player.status)
             if player.status == 4 and player.player_id == game.game_id and game.game_type == 1: # Partida vs Bot
                 server.active_games.remove(game)
                 print(f"Gano el bot")

@@ -20,10 +20,6 @@ def get_game(active_games, player: Player):
             return game
         elif player.player_id in game.game_id.split("_"):
             return game
-        
-def remove(server, game: Game, player: Player):
-    server.active_games.remove(game)
-    server.online_players.remove(player)
-
+    
 def msg_json(action: str, status: int, position: list) -> str:
     return json.dumps({"action": action, "status": status, "position": position})
