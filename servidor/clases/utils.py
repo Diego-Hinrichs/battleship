@@ -25,15 +25,5 @@ def remove(server, game: Game, player: Player):
     server.active_games.remove(game)
     server.online_players.remove(player)
 
-def winner(server, game: Game, player: Player) -> bool:
-    if game.win(player.player_id):
-        for player_to_remove in game:
-            if player.player_id == player_to_remove.player_id and isinstance(player_to_remove, Player):
-                server.online_players.remove(player_to_remove)
-        server.active_games.remove(game)
-        return True
-    else:
-        return False
-
 def msg_json(action: str, status: int, position: list) -> str:
     return json.dumps({"action": action, "status": status, "position": position})

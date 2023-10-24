@@ -3,13 +3,13 @@ from clases.Server import Server
 from clases.Game import Game
 from clases.Coordinates import Coordinates
 from clases.ServerMsg import ServerMessage
-from clases.utils import get_player, get_game, remove, winner
+from clases.utils import get_player, get_game, remove
 from console import Console
 import json
 
 server = Server()
 udp_server_socket = server.start_server()
-Console(server).start()
+Console(server).start() # Podria crear otra clase para buscar la partida
 
 def send_msg(udp_server_socket, client_address, action, status, position):
     response = ServerMessage(action=action, status=status, position=position).make_message()
@@ -32,12 +32,22 @@ def player_vs_player(game: Game, player: Player, client_address, coor_in):
     if game.lose(player.player_id):
         for player_to_remove in game:
             if player.player_id == player_to_remove.player_id and isinstance(player_to_remove, Player):
-                remove(server, game, player)
+                player.status = 1
+                player.remaining_lives = 6
+                player.game_type = 0
+                player.ships = {}
+                server.active_games.remove(game)
         send_msg(udp_server_socket,client_address, "l", 1, position=coor_in)
 
     elif game.current_turn == player.player_id:
         valid = server.user_attack(game=game, coor=coor)
-        if winner(server, game, player):
+        print(game.win(player.player_id) == 1)
+        if game.win(player.player_id) == 1:
+            # pasar el jugador a estado desconectado
+            player.status = 1
+            player.remaining_lives = 6
+            player.game_type = 0
+            player.ships = {}
             send_msg(udp_server_socket, client_address, "w", 1, position=coor_in)
         else:
             send_msg(udp_server_socket, client_address, action, status=1 if valid else 0, position=coor_in)
@@ -45,7 +55,7 @@ def player_vs_player(game: Game, player: Player, client_address, coor_in):
 while True:
     received_msg, client_address = udp_server_socket.recvfrom(1024)
     msg = json.loads(received_msg.decode(encoding='utf-8', errors='strict'))
-    print(msg)
+    #print(msg)
     is_valid_action, action = server.validate_action(msg)
 
     if is_valid_action:
@@ -126,21 +136,20 @@ while True:
                     send_msg(udp_server_socket, client_address, action, win, position=[])
 
         elif action == "d":
-            if player.status == 4: # Esta en partida
-                if player.player_id == game.game_id and game.game_type == 0: # Partida vs Bot
-                    server.active_games.remove(game)
-                    print(f"Gano el bot")
-                    send_msg(udp_server_socket, client_address, action, 1, [])
+            print(player.status)
+            if player.status == 4 and player.player_id == game.game_id and game.game_type == 1: # Partida vs Bot
+                server.active_games.remove(game)
+                print(f"Gano el bot")
+                status = 1 if server.disconnect_player(client_address) else 0
+                send_msg(udp_server_socket, client_address, action, status, [])
 
-                elif player.player_id in game.game_id.split("_") and game.game_type == 0:
-                    for player_to_disconnect in game:
-                        if player_to_disconnect.player_id == player.player_id:
-                            player_to_disconnect.remaining_lives = 0
-                            if game.current_turn == player.player_id:
-                                game.switch_turn()
-                            if isinstance(player_to_disconnect, Player): # Ultimo caso para no eliminar al bot xD
-                                server.online_players.remove(player_to_disconnect)
-                            send_msg(udp_server_socket, client_address, action, 1, [])
+            elif player.status == 4 and player.player_id in game.game_id.split("_") and game.game_type == 0:
+                for player_to_disconnect in game and player_to_disconnect.player_id == player.player_id:
+                    player_to_disconnect.remaining_lives = 0
+                    if game.current_turn == player.player_id:
+                        game.switch_turn()
+                        status = 1 if server.disconnect_player(client_address) else 0
+                        send_msg(udp_server_socket, client_address, action, status, [])
             else:
                 status = 1 if server.disconnect_player(client_address) else 0
                 send_msg(udp_server_socket, client_address, action, status=status, position=[])

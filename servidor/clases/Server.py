@@ -6,7 +6,7 @@ from clases.Bot import Bot
 from clases.Coordinates import Coordinates
 from clases.utils import get_player
 from dotenv import load_dotenv
-import socket, os
+import socket, os, threading
 
 load_dotenv(dotenv_path="../.env")
 SERVER_LOCAL = os.getenv("SERVER_LOCAL")
@@ -109,6 +109,7 @@ class Server:
             player.ships = temp_board.ships
             self.online_players[index] = player
             player.update_status(3)
+            
             return True
 
     def user_attack(self, game: Game, coor: Coordinates) -> bool:

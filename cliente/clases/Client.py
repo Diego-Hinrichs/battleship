@@ -49,14 +49,14 @@ class Client:
             elif (recieved_action == "w"):
                 win = 'Ganaste' if recieved_status == 1 else 'Aún no ganas'
                 if win == 'Ganaste':
-                    print(f"Ganaste\nPasas a estado desconectado, puedes conectarte nuevamente con (c):")
-                    self.__init__(status=0, game_type=0, remaining_lives=6) # Reset
+                    print(f"Ganaste\nPasas a estado conectado, puedes conectarte nuevamente con (c):")
+                    self.__init__(status=1, game_type=0, remaining_lives=6) # Reset
                 else:
                     print(win)
             
             elif (recieved_action == "l") and recieved_status == 1:
-                print(f'Perdiste\nPasas a estado desconectado, puedes conectarte nuevamente con (c):')
-                self.__init__(status=0, game_type=0, remaining_lives=6) # Reset                
+                print(f'Perdiste\nPasas a estado conectado, puedes selecionar partida (s):')
+                self.__init__(status=1, game_type=0, remaining_lives=6) # Reset                
 
             elif (recieved_action == "d") and recieved_status:
                 self.status = 0 # Desconectado

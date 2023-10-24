@@ -2,7 +2,6 @@ from clases.ClientMsg import ClientMessage
 from clases.Client import Client
 import json, sys, signal
 from dotenv import load_dotenv
-import socket
 import os
 
 load_dotenv(dotenv_path="../.env")
